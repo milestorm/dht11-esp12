@@ -1,5 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <DNSServer.h>
@@ -31,9 +32,27 @@ String webString="";     // String to display
 unsigned long previousMillis = 0;        // will store last temp was read
 const long interval = 2000;              // interval at which to read sensor
 
+String readTemp = ""; // initialize global vars for temp and hum
+String readHum = "";
 
-const uint8_t buttonPin = D3;
-int buttonState = 0;
+ESP8266WebServer server(80);    // set server
+
+int counter = 0;
+
+void handleNotFound(){
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET)?"GET":"POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i=0; i<server.args(); i++){
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+}
 
 void gettemperature() {
   // Wait at least 2 seconds seconds between measurements.
@@ -57,6 +76,12 @@ void gettemperature() {
     }*/
   }
 
+}
+
+void readTempFromSensor(){
+  gettemperature();
+  readTemp = String((int)temp_f);
+  readHum = String((int)humidity);
 }
 
 void setup()
@@ -98,16 +123,24 @@ void setup()
   Serial.println("*OTA: Ready");
   Serial.print("*OTA: IP address: ");Serial.println(WiFi.localIP());
 
-
+  server.on("/", [](){
+    server.send(200, "text/plain", "Accessed " + String(++counter) + " times.\nTEMP: "+readTemp+"*C\nHUM: "+readHum+"\%");
+  });
+  server.onNotFound(handleNotFound);
+  server.begin();
+  Serial.println("HTTP server started");
 
 }
 
 void loop()
 {
   ArduinoOTA.handle();
+  server.handleClient();
 
-  gettemperature();       // read sensor
-  webString="Teplota: "+String((int)temp_f)+"*C --- "+"Vlhkost: "+String((int)humidity)+"%";
+  //gettemperature();       // read sensor
+  //webString="Teplota: "+String((int)temp_f)+"*C --- "+"Vlhkost: "+String((int)humidity)+"%";
+  readTempFromSensor();
+  webString="Teplota: "+readTemp+"*C --- "+"Vlhkost: "+readHum+"%";
   Serial.println(webString);
 
   delay(2000);
