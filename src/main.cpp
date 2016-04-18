@@ -4,14 +4,15 @@
 #include <ArduinoOTA.h>
 #include <DNSServer.h>
 #include <WiFiManager.h>
-//#include <Arduino.h>
+#include <Arduino.h>
+//#include <math.h>
 
 #include <DHT.h>
 
 //Initialization
 // Sensor
 #define DHTTYPE DHT11
-#define DHTPIN 2
+#define DHTPIN D2
 
 
 // Initialize DHT sensor
@@ -23,11 +24,16 @@
 // Arduino Due that runs at 84mhz a value of 30 works.
 // This is for the ESP8266 processor on ESP-01
 DHT dht(DHTPIN, DHTTYPE, 11); // 11 works fine for ESP8266
+
 float humidity, temp_f;  // Values read from sensor
 String webString="";     // String to display
 
 unsigned long previousMillis = 0;        // will store last temp was read
 const long interval = 2000;              // interval at which to read sensor
+
+
+const uint8_t buttonPin = D3;
+int buttonState = 0;
 
 void gettemperature() {
   // Wait at least 2 seconds seconds between measurements.
@@ -43,20 +49,24 @@ void gettemperature() {
     // Reading temperature for humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (it's a very slow sensor)
     humidity = dht.readHumidity();          // Read humidity (percent)
-    temp_f = dht.readTemperature(true);     // Read temperature as Fahrenheit
+    temp_f = dht.readTemperature(false);     // Read temperature as Celsius
     // Check if any reads failed and exit early (to try again).
     /*if (isnan(humidity) || isnan(temp_f)) {
       Serial.println("Failed to read from DHT sensor!");
       return;
     }*/
   }
+
 }
 
 void setup()
 {
   // Init serial
   Serial.begin(230400);
-  Serial.println("Booting ESP8266 Htu21d wireless sensor");
+  Serial.println("Booting ESP8266");
+
+  dht.begin();
+
   // Init wifi manager
   WiFiManager wifiManager;
   wifiManager.autoConnect("ESP8266 Sensor");
@@ -87,13 +97,7 @@ void setup()
   ArduinoOTA.begin();
   Serial.println("*OTA: Ready");
   Serial.print("*OTA: IP address: ");Serial.println(WiFi.localIP());
-  // Init the humidity sensor
-/*
-  while (!htu.begin()) {
-    Serial.println("Couldn't find sensor!");
-    delay(500);
-  }
-  */
+
 
 
 }
@@ -103,9 +107,8 @@ void loop()
   ArduinoOTA.handle();
 
   gettemperature();       // read sensor
-  webString="Temperature: "+String((int)temp_f)+" F --- "+"Humidity: "+String((int)humidity)+"%";
+  webString="Teplota: "+String((int)temp_f)+"*C --- "+"Vlhkost: "+String((int)humidity)+"%";
   Serial.println(webString);
-  Serial.println(dht.readTemperature(true));
 
   delay(2000);
 }
