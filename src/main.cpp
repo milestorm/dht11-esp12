@@ -32,16 +32,13 @@ String webString="";     // String to display
 unsigned long previousMillis = 0;        // will store last temp was read
 const long interval = 2000;              // interval at which to read sensor
 
-String readTemp = ""; // initialize global vars for temp and hum
-String readHum = "";
+int readTemp = 0; // initialize global vars for temp and hum
+int readHum = 0;
 
-WiFiClient client;
-
+WiFiClient client; // MUST be above the server definition
 ESP8266WebServer server(80);    // set server
 
 int counter = 0;
-
-
 
 char msg[10];
 
@@ -108,8 +105,8 @@ void gettemperature() {
 
 void readTempFromSensor(){
   gettemperature();
-  readTemp = String((int)temp_f);
-  readHum = String((int)humidity);
+  readTemp = (int)temp_f;
+  readHum = (int)humidity;
 }
 
 void setup()
@@ -168,13 +165,13 @@ void loop()
   //gettemperature();       // read sensor
   //webString="Teplota: "+String((int)temp_f)+"*C --- "+"Vlhkost: "+String((int)humidity)+"%";
   readTempFromSensor();
-  webString="Teplota: "+readTemp+"*C --- "+"Vlhkost: "+readHum+"%";
+  webString="Teplota: "+String(readTemp)+"*C --- "+"Vlhkost: "+String(readHum)+"%";
   Serial.println(webString);
 
   snprintf(
-            msg, 75, "{\"distance\":\"%ld\",\"battery\":\"%ld\"}",
-            (long) (9999),
-            (long) (8888)
+            msg, 75, "{\"temperature\":\"%ld\",\"humidity\":\"%ld\"}",
+            (int) (readTemp),
+            (int) (readHum)
     );
     Serial.print("Publish message: ");
     Serial.println(msg);
