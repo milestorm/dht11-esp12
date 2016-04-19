@@ -39,6 +39,8 @@ ESP8266WebServer server(80);    // set server
 
 int counter = 0;
 
+char msg[10];
+
 void handleNotFound(){
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -52,6 +54,27 @@ void handleNotFound(){
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   server.send(404, "text/plain", message);
+}
+
+void post(char *payload) {
+    Serial.print("*POST: ");
+    Serial.println(payload);
+
+    if (client.connect("requestb.in", 80)) {
+        Serial.println("*POST: Connected! Sending");
+
+        client.println("POST /xb6g14xb HTTP/1.1");
+        client.println("Host:  requestb.in");
+        client.println("User-Agent: ESP8266/1.0");
+        client.println("Connection: close");
+        client.println("Content-Type: application/json;");
+        client.print("Content-Length: ");
+        client.println(String(payload).length());
+        client.println();
+        client.println(String(payload));
+    } else {
+        Serial.println("*POST: Connection failed!");
+    }
 }
 
 void gettemperature() {
@@ -142,6 +165,15 @@ void loop()
   readTempFromSensor();
   webString="Teplota: "+readTemp+"*C --- "+"Vlhkost: "+readHum+"%";
   Serial.println(webString);
+
+  snprintf(
+            msg, 75, "{\"distance\":\"%ld\",\"battery\":\"%ld\"}",
+            (long) (9999),
+            (long) (8888)
+    );
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    post(msg);
 
   delay(2000);
 }
