@@ -35,9 +35,13 @@ const long interval = 2000;              // interval at which to read sensor
 String readTemp = ""; // initialize global vars for temp and hum
 String readHum = "";
 
+WiFiClient client;
+
 ESP8266WebServer server(80);    // set server
 
 int counter = 0;
+
+
 
 char msg[10];
 
@@ -64,7 +68,7 @@ void post(char *payload) {
         Serial.println("*POST: Connected! Sending");
 
         client.println("POST /xb6g14xb HTTP/1.1");
-        client.println("Host:  requestb.in");
+        client.println("Host: requestb.in");
         client.println("User-Agent: ESP8266/1.0");
         client.println("Connection: close");
         client.println("Content-Type: application/json;");
@@ -72,6 +76,7 @@ void post(char *payload) {
         client.println(String(payload).length());
         client.println();
         client.println(String(payload));
+
     } else {
         Serial.println("*POST: Connection failed!");
     }
