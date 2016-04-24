@@ -61,14 +61,14 @@ void post(char *payload) {
     Serial.print("*POST: ");
     Serial.println(payload);
 
-    if (client.connect("requestb.in", 80)) {
+    if (client.connect("milestorm.net", 80)) {
         Serial.println("*POST: Connected! Sending");
 
-        client.println("POST /xb6g14xb HTTP/1.1");
-        client.println("Host: requestb.in");
+        client.println("POST /esp/temppost.php HTTP/1.1");
+        client.println("Host: milestorm.net");
         client.println("User-Agent: ESP8266/1.0");
         client.println("Connection: close");
-        client.println("Content-Type: application/json;");
+        client.println("Content-Type:application/x-www-form-urlencoded;");
         client.print("Content-Length: ");
         client.println(String(payload).length());
         client.println();
@@ -169,13 +169,14 @@ void loop()
   Serial.println(webString);
 
   snprintf(
-            msg, 75, "{\"temperature\":\"%ld\",\"humidity\":\"%ld\"}",
+            msg, 75, "temperature=%ld&humidity=%ld",
             (int) (readTemp),
             (int) (readHum)
     );
+
     Serial.print("Publish message: ");
     Serial.println(msg);
     post(msg);
 
-  delay(2000);
+  delay(30000); // delay 30s
 }
